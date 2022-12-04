@@ -24,14 +24,15 @@ void mpu6050_mainloop(void *arg) {
 
     while (1) {
         pub_SysTimerCount = osKernelGetSysTimerCount();
-        mcu_i2c_mem_read(0x68, 0x3b, addr, 2);
+        mcu_i2c_mem_read(0x68, 0x3b, addr, 5);
         pub_SysTimerCount = osKernelGetSysTimerCount() - pub_SysTimerCount;
-        sprintf(bufs, "Read 0x3B: %02X %02X cost %d us", addr[0], addr[1], pub_SysTimerCount / 120);
-
+        sprintf(bufs, "I2C: %02X %02X %02X %02X %02X, %d us", addr[0], addr[1],
+                addr[2], addr[3], addr[4],
+                pub_SysTimerCount / 120);
         osEventFlagsSet(evt_id, FLAGS_MSK1_GOT_NEW_DATA);  //给时间的Mask置位
         // osThreadYield();                            // suspend thread
 
-        osDelay(300);
+        osDelay(100);
     }
 }
 
@@ -43,27 +44,36 @@ void lcd_disp(void *a) {
     POINT_COLOR = WHITE;
     Gui_StrCenter(0, 2, BLACK, BLUE, "MPU6050-TEST", 16, 1);//居中显示
 
-    uint32_t flush_cnt=0;
+    uint32_t flush_cnt = 0;
     while (1) {
         //等待获取新的消息，获取到之后，对应的标志位会自动被清除，不需要手动清除
         osEventFlagsWait(evt_id, FLAGS_MSK1_GOT_NEW_DATA, osFlagsWaitAny, osWaitForever);
         // osEventFlagsClear (evt_id, FLAGS_MSK1_GOT_NEW_DATA);
 
         pub_SysTimerCount = osKernelGetSysTimerCount();
-        LCD_Fill(0, 20, lcddev.width, 36, WHITE);
-        // Gui_StrCenter(0, 22, BLACK, BLUE, bufs, 16, 1);//居中显示
+        LCD_Fill(0, 20, lcddev.width, 36, GREEN);
+        Gui_StrCenter(0, 22, BLACK, BLUE, bufs, 16, 1);//居中显示
         pub_SysTimerCount = osKernelGetSysTimerCount() - pub_SysTimerCount;
 
-        sprintf(bufs, "%lu ' /%d us", flush_cnt++,pub_SysTimerCount / 120);
-        LCD_Fill(0, 37, lcddev.width, 37 + 16, WHITE);
+        sprintf(bufs, "%lu ' /%d us", flush_cnt++, pub_SysTimerCount / 120);
+        LCD_Fill(0, 37, lcddev.width, 37 + 16, GREEN);
         Gui_StrCenter(0, 37, BLACK, BLUE, bufs, 16, 1);//居中显示
 
-        osThreadGetStackSize(NULL);
+
+        uint32_t cStackSize = osThreadGetCount();
+        sprintf(bufs, "StackCount: %d", cStackSize);
+        LCD_Fill(0, 54, lcddev.width, 54 + 16, GREEN);
+        Gui_StrCenter(0, 54, BLACK, BLUE, bufs, 16, 1);//居中显示
+
         board_led_toggle();
     }
 }
 
-void app_main(void *argument) {
+
+int main(void) {
+    NVIC_SetPriorityGrouping(4);  //配置使用4bits 作为NVIC中断优先级分组，此函数程序只执行一次
+
+    osKernelInitialize();                 // Initialize CMSIS-RTOS
     //初始化segger rtt,使用NO_BLOCK_SKIP模式，当没有读取时，把数据丢弃，程序不会被卡死
     SEGGER_RTT_ConfigUpBuffer(0, NULL, NULL, 0, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
 
@@ -75,18 +85,12 @@ void app_main(void *argument) {
     evt_id = osEventFlagsNew(NULL);
     osThreadNew(mpu6050_mainloop, NULL, NULL);    // Create application main thread
     osThreadNew(lcd_disp, NULL, NULL);    // Create application main thread
+
+    // osThreadNew(app_main, NULL, NULL);    // Create application main thread
+    osKernelStart();                      // Start thread execution
     for (;;) {
         osDelay(osWaitForever);
     }
-}
-
-int main(void) {
-    NVIC_SetPriorityGrouping(4);  //配置使用4bits 作为NVIC中断优先级分组，此函数程序只执行一次
-
-    osKernelInitialize();                 // Initialize CMSIS-RTOS
-    osThreadNew(app_main, NULL, NULL);    // Create application main thread
-    osKernelStart();                      // Start thread execution
-    for (;;) {}
 }
 
 

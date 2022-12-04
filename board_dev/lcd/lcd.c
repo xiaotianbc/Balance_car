@@ -2,7 +2,6 @@
 #include "lcd.h"
 #include "stdlib.h"
 #include "main.h"
-#include "spi.h"
 #include "cmsis_os2.h"
 #include "mcu_spi.h"
 
@@ -92,8 +91,10 @@ void LCD_WriteRAM_Prepare(void) {
 void Lcd_WriteData_16Bit(u16 Data) {
     LCD_CS_CLR;
     LCD_RS_SET;
-    SPI_WriteByte(SPI1, Data >> 8);
-    SPI_WriteByte(SPI1, Data);
+    SPI2_set_dataformat_init_to_16bit(1);
+    mcu_spi2_send_16bit_ll(Data);
+    SPI2_set_dataformat_init_to_16bit(0);
+
     LCD_CS_SET;
 }
 
@@ -122,12 +123,18 @@ void LCD_Clear(u16 Color) {
     LCD_SetWindows(0, 0, lcddev.width - 1, lcddev.height - 1);
     LCD_CS_CLR;
     LCD_RS_SET;
+    SPI2_set_dataformat_init_to_16bit(1);
     for (i = 0; i < lcddev.height; i++) {
         for (m = 0; m < lcddev.width; m++) {
-            SPI_WriteByte(SPI1, Color >> 8);
-            SPI_WriteByte(SPI1, Color);
+
+            mcu_spi2_send_16bit_ll(Color);
+
+//            SPI_WriteByte(SPI1, Color >> 8);
+//            SPI_WriteByte(SPI1, Color);
         }
     }
+    SPI2_set_dataformat_init_to_16bit(0);
+
     LCD_CS_SET;
 }
 

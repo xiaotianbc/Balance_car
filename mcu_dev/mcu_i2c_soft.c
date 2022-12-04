@@ -26,6 +26,7 @@
  *@retval:     static
  */
 static void mcu_i2c_delay(void) {
+    /*AT24C16, MPU6050,当前延迟(i = 5)可稳定通信*/
     volatile uint8_t i = 5;
     while (i--) {
         __NOP();
@@ -372,7 +373,7 @@ int32_t mcu_i2c_mem_read(u8 addr, uint8_t reg_addr, u8 *data, s32 datalen) {
 
 
 /**
- * I2C写入寄存器
+ * I2C写入寄存器 (已经使用AT24Cxx EEPROM验证，批量写入可用)
  * @param addr 从机的设备地址，7位格式，不需要左移
  * @param reg_addr 要写入的寄存器地址
  * @param data 待写入缓冲区

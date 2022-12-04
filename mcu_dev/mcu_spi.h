@@ -66,5 +66,45 @@ __STATIC_FORCEINLINE void mcu_spi2_send_byte_ll(uint8_t b) {
     (void) SPI_DEVICE->DR;
 }
 
+/*
+ * 除了DMA以外最快的传输函数，缺少了健壮性，
+ * 把函数放在头文件里(__STATIC_FORCEINLINE没法放在源文件)，
+ * 用__STATIC_FORCEINLINE修饰，效果更快
+ */
+__STATIC_FORCEINLINE void mcu_spi2_send_16bit_ll(uint16_t b) {
+    /* 忙等待 */
+    /*为了节省时间 ，这里先注释掉，理论上来说，是不需要的，如果每次都在接收的话*/
+    //  while ((SPI_DEVICE->SR & SPI_I2S_FLAG_BSY) != RESET);
+    /* 清空SPI缓冲数据，防止读到上次传输遗留的数据 */
+    /*为了节省时间 ，这里先注释掉，理论上来说，是不需要的，如果每次都在接收的话*/
+//    time_out = 0;
+//    while ((SPI_DEVICE->SR & SPI_I2S_FLAG_RXNE) != RESET) {
+//        (void) SPI_DEVICE->DR;
+//    }
+
+#ifndef SPI_DEVICE
+#define SPI_DEVICE SPI2
+#endif
+    /* 开始传输 */
+    // 写数据
+    SPI_DEVICE->DR = b;
+    // 等待接收结束
+    while ((SPI_DEVICE->SR & SPI_I2S_FLAG_RXNE) == RESET) {
+    }
+    (void) SPI_DEVICE->DR;
+}
+
+/**
+ * 设置SPI2的数据格式为16bit/8bit
+ * @param is16bit
+ */
+__STATIC_FORCEINLINE void SPI2_set_dataformat_init_to_16bit(uint8_t is16bit) {
+    if (is16bit > 0) {
+        SPI2->CR1 |= (1 << 11);   //16 bit
+    } else {
+        SPI2->CR1 &= ~(1 << 11);
+    }
+}
+
 
 #endif //F401_BALANCE_CAR_BOOTLOADER_MCU_SPI_H
