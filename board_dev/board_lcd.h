@@ -1,0 +1,11 @@
+//
+// Created by xiaotian on 2022/11/29.
+//
+
+#ifndef F401_BALANCE_CAR_BOOTLOADER_BOARD_LCD_H
+#define F401_BALANCE_CAR_BOOTLOADER_BOARD_LCD_H
+
+#include "main.h"
+
+
+#endif //F401_BALANCE_CAR_BOOTLOADER_BOARD_LCD_H
