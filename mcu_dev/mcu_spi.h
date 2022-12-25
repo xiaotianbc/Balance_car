@@ -8,13 +8,16 @@
 
 #include "stm32f4xx.h"
 
+
+
 typedef enum {
     DEV_SPI_NULL = 0,
     DEV_SPI_2_1 = 0x21,        //SPI_2_1- LCD屏幕
-    DEV_SPI_3_1 = 0X31,//核心板上的SPI使用SPI3，定义为SPI_3_1
+    DEV_SPI_2_2 = 0X22,//NRF24L01接口
     DEV_SPI_3_2,    //底板板上的SPI使用SPI3，定义为SPI_3_2
     DEV_SPI_3_3,        //外扩的SPI定义为SPI_3_3
 } SPI_DEV;
+
 
 typedef enum {
     SPI_MODE_0 = 0,
@@ -23,6 +26,7 @@ typedef enum {
     SPI_MODE_3,
     SPI_MODE_MAX
 } SPI_MODE;
+
 
 extern s32 mcu_spi_init(void);
 
@@ -96,15 +100,9 @@ __STATIC_FORCEINLINE void mcu_spi2_send_16bit_ll(uint16_t b) {
 
 /**
  * 设置SPI2的数据格式为16bit/8bit
- * @param is16bit
  */
-__STATIC_FORCEINLINE void SPI2_set_dataformat_init_to_16bit(uint8_t is16bit) {
-    if (is16bit > 0) {
-        SPI2->CR1 |= (1 << 11);   //16 bit
-    } else {
-        SPI2->CR1 &= ~(1 << 11);
-    }
-}
+#define  SPI2_set_dataformat_16bit() do{SPI2->CR1 |= (1 << 11);}while(0)
+#define  SPI2_set_dataformat_8bit() do{SPI2->CR1 &= ~(1 << 11);}while(0)
 
 
 #endif //F401_BALANCE_CAR_BOOTLOADER_MCU_SPI_H

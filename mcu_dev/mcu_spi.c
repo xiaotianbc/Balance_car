@@ -147,7 +147,7 @@ s32 mcu_spi_open(SPI_DEV dev, SPI_MODE mode, u16 pre) {
     */
     SPI_Cmd(SPI_DEVICE, ENABLE);
 
-    if (dev == DEV_SPI_3_1) {
+    if (dev == DEV_SPI_2_2) {
         GPIO_ResetBits(GPIOB, GPIO_Pin_14);
     } else if (dev == DEV_SPI_3_2) {
         GPIO_ResetBits(GPIOG, GPIO_Pin_15);
@@ -178,7 +178,7 @@ s32 mcu_spi_close(SPI_DEV dev) {
         return -1;
     }
 
-    if (dev == DEV_SPI_3_1) {
+    if (dev == DEV_SPI_2_2) {
         GPIO_SetBits(GPIOB, GPIO_Pin_14);
     } else if (dev == DEV_SPI_3_2) {
         GPIO_SetBits(GPIOG, GPIO_Pin_15);
@@ -285,7 +285,7 @@ s32 mcu_spi_cs(SPI_DEV dev, u8 sta) {
 
     if (sta == 1) {
         switch (dev) {
-            case DEV_SPI_3_1:
+            case DEV_SPI_2_2:
                 GPIO_SetBits(GPIOB, GPIO_Pin_14);
                 break;
             case DEV_SPI_3_2:
@@ -299,7 +299,7 @@ s32 mcu_spi_cs(SPI_DEV dev, u8 sta) {
         }
     } else {
         switch (dev) {
-            case DEV_SPI_3_1:
+            case DEV_SPI_2_2:
                 GPIO_ResetBits(GPIOB, GPIO_Pin_14);
                 break;
             case DEV_SPI_3_2:

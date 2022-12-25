@@ -37,11 +37,11 @@ void LCD_Fill(u16 sx, u16 sy, u16 ex, u16 ey, u16 color) {
 
     LCD_CS_CLR;
     LCD_RS_SET;
-    SPI2_set_dataformat_init_to_16bit(1);
+    SPI2_set_dataformat_16bit();
     for (int j = 0; j < height * width; ++j) {
         mcu_spi2_send_16bit_ll(color);
     }
-    SPI2_set_dataformat_init_to_16bit(0);
+    SPI2_set_dataformat_8bit();
     LCD_CS_SET;
     LCD_SetWindows(0, 0, lcddev.width - 1, lcddev.height - 1);//恢复窗口设置为全屏
 }
@@ -645,26 +645,53 @@ void Gui_StrCenter(u16 x, u16 y, u16 fc, u16 bc, u8 *str, u8 size, u8 mode) {
     Show_Str(x1, y, fc, bc, str, size, mode);
 }
 
+/**
+  * @brief  ST7735 Size
+  */
+#define ST7735_OK                (0)
+#define ST7735_ERROR             (-1)
+
+
 /*****************************************************************************
- * @name       :void Gui_Drawbmp16(u16 x,u16 y,const unsigned char *p)
+ * @name       :void Gui_Drawbmp16(u16 Xpos,u16 y,const unsigned char *pbmp)
  * @date       :2018-08-09
  * @function   :Display a 16-bit BMP image
- * @parameters :x:the bebinning x coordinate of the BMP image
+ * @parameters :Xpos:the bebinning Xpos coordinate of the BMP image
                 y:the bebinning y coordinate of the BMP image
-								p:the start address of image array
+								pbmp:the start address of image array
  * @retvalue   :None
 ******************************************************************************/
-void Gui_Drawbmp16(u16 x, u16 y, const unsigned char *p) //显示40*40 QQ图片
+void Gui_Drawbmp16(u16 Xpos, u16 Ypos, const unsigned char *pbmp) //显示40*40 QQ图片
 {
-    int i;
-    unsigned char picH, picL;
-    LCD_SetWindows(x, y, x + 40 - 1, y + 40 - 1);//窗口设置
-    for (i = 0; i < 40 * 40; i++) {
-        picL = *(p + i * 2);    //数据低位在前
-        picH = *(p + i * 2 + 1);
-        Lcd_WriteData_16Bit(picH << 8 | picL);
+    uint32_t index = 0, size = 0;
+
+    /* Read bitmap size */
+    size = *(volatile uint16_t *) (pbmp + 2);
+    size |= (*(volatile uint16_t *) (pbmp + 4)) << 16;
+    /* Get bitmap data address offset */
+    index = *(volatile uint16_t *) (pbmp + 10);
+    index |= (*(volatile uint16_t *) (pbmp + 12)) << 16;
+    size = (size - index)/2;
+    pbmp += index;
+
+    /* Set GRAM write direction and BGR = 0 */
+    /* Memory access control: MY = 0, MX = 1, MV = 0, ML = 0 */
+    LCD_WR_REG(0x36);
+    LCD_WR_DATA(0x40);
+
+    /* Set Cursor */
+    LCD_SetCursor(Xpos,Ypos);
+
+    for (int i = 0; i < size; ++i) {
+        Lcd_WriteData_16Bit(*pbmp);
+        pbmp+=2;
     }
-    LCD_SetWindows(0, 0, lcddev.width - 1, lcddev.height - 1);//恢复显示窗口为全屏
+
+    /* Set GRAM write direction and BGR = 0 */
+    /* Memory access control: MY = 1, MX = 1, MV = 0, ML = 0 */
+    LCD_WR_REG(0x36);
+    LCD_WR_DATA(0xC0);
+
 }
 
 #include "mcu_spi.h"

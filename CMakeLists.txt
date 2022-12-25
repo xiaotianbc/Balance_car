@@ -61,7 +61,7 @@ add_definitions(-DCONFIG_USB_DWC2_PORT=FS_PORT)
 
 #预处理器包含的文件夹
 include_directories(
-        CMSIS
+        STM32F4xx_StdPeriph_Driver/CMSIS
         STM32F4xx_StdPeriph_Driver/inc
         User
         board_dev
@@ -70,18 +70,19 @@ include_directories(
         middleware/ringbuffer
 
         #        /*cmsis rtos2*/
-        middleware/RTOS2/Include
-        middleware/RTOS2/RTX/Include
-        middleware/RTOS2/RTX/Include1
-        middleware/RTOS2/RTX/Config
-        middleware/RTOS2/RTX/Library
-        middleware/RTOS2/RTX/Source
-
+        middleware/FreeRTOS/Source/include
+        middleware/FreeRTOS/Source/portable/GCC/ARM_CM4F
         # segger rtt
         middleware/SEGGER_RTT_V782b/Config
         middleware/SEGGER_RTT_V782b/RTT
         middleware/common_tool
 
+        middleware/smart_printf/
+
+        middleware/lvgl-8.3.3
+        middleware/littlefs
+
+        middleware/sfud/inc
 )
 
 
@@ -91,27 +92,42 @@ add_definitions(-DUSE_STDPERIPH_DRIVER -DSTM32F401xx)
 file(GLOB_RECURSE SOURCES
         User/*.*
         STM32F4xx_StdPeriph_Driver/src/*.*
-        CMSIS/startup_stm32f401xx.s
+        STM32F4xx_StdPeriph_Driver/CMSIS/startup_stm32f401xx.s
         board_dev/*.*
         mcu_dev/*.*
         middleware/ringbuffer/*.*
         # CMSIS-RTOS2
-        middleware/RTOS2/RTX/Config/*.c
-        middleware/RTOS2/Source/os_systick.c
-        middleware/RTOS2/RTX/Source/*.c
-        middleware/RTOS2/RTX/Source/GCC/irq_armv7m.S
+        middleware/FreeRTOS/Source/croutine.c
+        middleware/FreeRTOS/Source/event_groups.c
+        middleware/FreeRTOS/Source/list.c
+        middleware/FreeRTOS/Source/queue.c
+        middleware/FreeRTOS/Source/stream_buffer.c
+        middleware/FreeRTOS/Source/tasks.c
+        middleware/FreeRTOS/Source/timers.c
+        middleware/FreeRTOS/Source/portable/MemMang/heap_4.c
+        middleware/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
+
 
         # segger rtt
         middleware/SEGGER_RTT_V782b/RTT/*.*
         middleware/SEGGER_RTT_V782b/Syscalls/SEGGER_RTT_Syscalls_GCC.c
 
         middleware/common_tool/*.c
+
+        middleware/smart_printf/printf.c
+
+        middleware/sfud/*.c
+
+        middleware/lvgl-8.3.3/*.c
+
+        middleware/littlefs/*.c
         )
 
 #排除stm32F401不支持的fsmc 和fmc
 file(GLOB_RECURSE EXCLUDE_SRCS
         STM32F4xx_StdPeriph_Driver/src/stm32f4xx_fmc.c
         STM32F4xx_StdPeriph_Driver/src/stm32f4xx_fsmc.c
+
         )
 # 从源文件列表(SOURCES)中剔除干扰文件(EXCLUDE_SRCS)
 list(REMOVE_ITEM SOURCES ${EXCLUDE_SRCS})

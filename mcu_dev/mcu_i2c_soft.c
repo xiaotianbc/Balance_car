@@ -18,43 +18,18 @@
 
 #define MCU_I2C_TIMEOUT 250
 
-/**
- *@brief:      mcu_i2c_delay
- *@details:    I2C信号延时函数
- *@param[in]   void  
- *@param[out]  无
- *@retval:     static
- */
-static void mcu_i2c_delay(void) {
-    /*AT24C16, MPU6050,当前延迟(i = 5)可稳定通信*/
-    volatile uint8_t i = 5;
-    while (i--) {
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-        __NOP();
-    }
-
-}
+// i2c 延迟函数，一般可以用若干个nop
+#define mcu_i2c_delay() do{\
+                        __NOP();__NOP();__NOP();__NOP();\
+                        __NOP();__NOP();__NOP();__NOP();\
+                        __NOP();__NOP();__NOP();__NOP();\
+                        __NOP();__NOP();__NOP();__NOP();\
+                        __NOP();__NOP();__NOP();__NOP();\
+                        __NOP();__NOP();__NOP();__NOP();\
+                           }while(0)
 
 /**
- *@brief:      mcu_i2c_sda_input
- *@details:    将I2C sda IO设置为输入
- *@param[in]   void  
- *@param[out]  无
- *@retval:     
+ * 设置 i2c sda引脚为读取功能
  */
 void mcu_i2c_sda_input(void) {
 #if 1
@@ -91,23 +66,14 @@ void mcu_i2c_sda_output(void) {
 #endif
 }
 
-/**
- *@brief:      mcu_i2c_readsda
- *@details:    读SDA数据
- *@param[in]   void  
- *@param[out]  无
- *@retval:     static
- */
-static s32 mcu_i2c_readsda(void) {
-    if (Bit_SET == GPIO_ReadInputDataBit(MCU_I2C_PORT, MCU_I2C_SDA))
-        return 1;
-    else
-        return 0;
-}
-
+// 读取 i2c sda引脚电平，返回值：1 or 0
+#define  mcu_i2c_readsda() (!!(MCU_I2C_PORT->IDR & MCU_I2C_SDA))
 
 #define  mcu_i2c_sda(sta) MCU_I2C_PORT->BSRR=(sta!=0)?MCU_I2C_SDA:(MCU_I2C_SDA<<16)
 #define  mcu_i2c_scl(sta) MCU_I2C_PORT->BSRR=(sta!=0)?MCU_I2C_SCL:(MCU_I2C_SCL<<16)
+
+
+
 
 /**
  *@brief:      mcu_i2c_start
